@@ -13,8 +13,8 @@ def create():
     id = str(uuid.uuid4())
     games[id] = Sala()
     lista = []
-    for bot in games[id].schedule.agents:
-        lista.append({"id": bot.unique_id, "x": bot.pos[0], "z": bot.pos[1]})
+    for agent in games[id].schedule.agents:
+        lista.append({"id": agent.unique_id, "x": int(agent.pos[0]), "z": int(agent.pos[1]), "type": agent.type})
 
     # response = flask.make_response()
     # response.headers['Location'] = f"/games/{id}"
@@ -29,8 +29,8 @@ def queryState(id):
     model = games[id]
     model.step()
     lista = []
-    for bot in model.schedule.agents:
-        lista.append({"id": bot.unique_id, "x": bot.pos[0], "z": bot.pos[1]})
+    for agent in model.schedule.agents:
+        lista.append({"id": agent.unique_id, "x": int(agent.pos[0]), "z": int(agent.pos[1]), "type": agent.type})
     return jsonify(lista)
 
 app.run()

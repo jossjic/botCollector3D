@@ -104,6 +104,6 @@ while not done:
     display()
 
     pygame.display.flip()
-    pygame.time.wait(1000)
+    #pygame.time.wait(1000)
 
 pygame.quit()

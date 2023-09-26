@@ -19,6 +19,7 @@ class Bot(Agent):
     def __init__(self, model, pos, incineradorAgent):
         super().__init__(model.next_id(), model)
         self.pos = pos
+        self.type = "Bot"
         self.incineradorAgent = incineradorAgent
         print(self.incineradorAgent)
 
@@ -83,6 +84,7 @@ class Incinerador(Agent):
     def __init__(self, model, pos):
         super().__init__(model.next_id(), model)
         self.pos = pos
+        self.type = "Incinerador"
         self.condition= self.OFF
         self.timer = 0
         
@@ -104,6 +106,7 @@ class Basura(Agent):
     def __init__(self, model):
         super().__init__(model.next_id(), model)
         self.condition = self.UNCOLLECT
+        self.type = "Basura"
         
 
 class   Sala(Model):
