@@ -19,17 +19,19 @@ steps = 0
 
 
 class Agentes(Agent):
-    w_trash=False
+    with_trash="With trash"
+    without_trash = "Without trash"
     def __init__(self, model, pos, incineradorAgent):
         super().__init__(model.next_id(), model)
         self.pos = pos
         self.type = "robot"
+        self.condition = self.without_trash
         self.incineradorAgent = incineradorAgent
 
     def step(self):
         global globalMatrix
         global steps
-        if not self.w_trash:
+        if not self.condition==self.with_trash:
             new_pos = self.pos + np.array([self.random.randrange(-1, 2, 1),self.random.randrange(-1,2,1)])
             while (self.model.grid.out_of_bounds(new_pos) or (new_pos[0]==self.incineradorAgent.pos[0] and new_pos[1]==self.incineradorAgent.pos[1])):
                         new_pos = self.pos + np.array([self.random.randrange(-1, 2, 1),self.random.randrange(-1,2,1)])
@@ -54,7 +56,7 @@ class Agentes(Agent):
                     
                         
             else:
-                self.w_trash=False
+                self.condition = self.without_trash
                 self.incineradorAgent.condition = self.incineradorAgent.ON
             incineradorOn = self.incineradorAgent.condition == self.incineradorAgent.ON and new_pos[0]==self.incineradorAgent.pos[0] and new_pos[1]==self.incineradorAgent.pos[1]
             if not incineradorOn:
@@ -63,15 +65,15 @@ class Agentes(Agent):
                 
                 
         for element in self.model.grid.get_cell_list_contents([self.pos]):
-            if type(element) == Basura and element.condition == element.UNCOLLECT and not self.w_trash:
+            if type(element) == Basura and element.condition == element.UNCOLLECT and not self.condition == self.with_trash:
                 element.condition = element.COLLECT
                 globalMatrix[self.pos[0]][self.pos[1]]=1
-                self.w_trash=True
+                self.condition = self.with_trash
 
 
 class Incinerador(Agent):
-    ON=1
-    OFF=2
+    ON="ON"
+    OFF="OFF"
     def __init__(self, model, pos):
         super().__init__(model.next_id(), model)
         self.pos = pos
@@ -91,8 +93,8 @@ class Incinerador(Agent):
         
 class Basura(Agent):
     
-    COLLECT = 0
-    UNCOLLECT = 1
+    COLLECT = "COLLECT"
+    UNCOLLECT = "UNCOLLECT"
 
     def __init__(self, model):
         super().__init__(model.next_id(), model)
