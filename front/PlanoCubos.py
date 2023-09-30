@@ -31,9 +31,9 @@ ZNEAR=0.01
 ZFAR=900.0
 #Variables para definir la posicion del observador
 #gluLookAt(EYE_X,EYE_Y,EYE_Z,CENTER_X,CENTER_Y,CENTER_Z,UP_X,UP_Y,UP_Z)
-EYE_X=300.0
+EYE_X=350.0
 EYE_Y=200.0
-EYE_Z=300.0
+EYE_Z=350.0
 CENTER_X=0
 CENTER_Y=0
 CENTER_Z=0
