@@ -19,26 +19,30 @@ steps = 0
 
 
 class Agentes(Agent):
-    with_trash="With trash"
-    without_trash = "Without trash"
+    w_trash=False
     def __init__(self, model, pos, incineradorAgent):
         super().__init__(model.next_id(), model)
         self.pos = pos
         self.type = "robot"
-        self.condition = self.without_trash
         self.incineradorAgent = incineradorAgent
 
     def step(self):
         global globalMatrix
         global steps
-        if not self.condition==self.with_trash:
-            new_pos = self.pos + np.array([self.random.randrange(-1, 2, 1),self.random.randrange(-1,2,1)])
-            while (self.model.grid.out_of_bounds(new_pos) or (new_pos[0]==self.incineradorAgent.pos[0] and new_pos[1]==self.incineradorAgent.pos[1])):
-                        new_pos = self.pos + np.array([self.random.randrange(-1, 2, 1),self.random.randrange(-1,2,1)])
+        if not self.w_trash:
+            possible_moves = [(0, 1), (0, -1), (1, 0), (-1, 0)]  # Movimientos permitidos (arriba, abajo, izquierda, derecha)
+            
+            new_pos = self.pos + np.array(self.random.choice(possible_moves))
+            
+            while (self.model.grid.out_of_bounds(new_pos) or (new_pos[0] == self.incineradorAgent.pos[0] and new_pos[1] == self.incineradorAgent.pos[1])):
+                new_pos = self.pos + np.array(self.random.choice(possible_moves))
+            
             self.model.grid.move_agent(self, new_pos)
+            
             if steps > 3:
                 self.incineradorAgent.condition = self.incineradorAgent.OFF
                 steps = 0
+
         else:     
             new_pos = self.pos    
             print(globalMatrix)
@@ -51,12 +55,12 @@ class Agentes(Agent):
                 self_pos = grid.node(g1, g2)
                 path, _ = finder.find_path(self_pos, incinerador_pos, grid)
                 if len(path) > 1:
-                    new_pos = path[1]
+                    new_pos = (path[1].x, path[1].y)
                     print("si se puede")
                     
                         
             else:
-                self.condition = self.without_trash
+                self.w_trash=False
                 self.incineradorAgent.condition = self.incineradorAgent.ON
             incineradorOn = self.incineradorAgent.condition == self.incineradorAgent.ON and new_pos[0]==self.incineradorAgent.pos[0] and new_pos[1]==self.incineradorAgent.pos[1]
             if not incineradorOn:
@@ -65,15 +69,15 @@ class Agentes(Agent):
                 
                 
         for element in self.model.grid.get_cell_list_contents([self.pos]):
-            if type(element) == Basura and element.condition == element.UNCOLLECT and not self.condition == self.with_trash:
+            if type(element) == Basura and element.condition == element.UNCOLLECT and not self.w_trash:
                 element.condition = element.COLLECT
-                globalMatrix[self.pos[0]][self.pos[1]]=1
-                self.condition = self.with_trash
+                globalMatrix[self.pos[1]][self.pos[0]]=1
+                self.w_trash=True
 
 
 class Incinerador(Agent):
-    ON="ON"
-    OFF="OFF"
+    ON=1
+    OFF=2
     def __init__(self, model, pos):
         super().__init__(model.next_id(), model)
         self.pos = pos
@@ -93,8 +97,8 @@ class Incinerador(Agent):
         
 class Basura(Agent):
     
-    COLLECT = "COLLECT"
-    UNCOLLECT = "UNCOLLECT"
+    COLLECT = 0
+    UNCOLLECT = 1
 
     def __init__(self, model):
         super().__init__(model.next_id(), model)
@@ -130,8 +134,8 @@ class   Sala(Model):
                 basura = Basura(self)
                 self.grid.place_agent(basura, (x,y))
                 self.schedule.add(basura)
-                self.matrix[x][y]=0
-        self.matrix=np.rot90(self.matrix, k=1)
+                self.matrix[y][x]=0
+        #self.matrix=np.rot90(self.matrix, k=1)
         globalMatrix = self.matrix
         
         
@@ -177,3 +181,30 @@ class   Sala(Model):
             self.schedule.step()
             steps += 1
             print(steps)
+            
+
+def agent_portrayal(agent):
+    if type(agent) == Agentes:
+        return {"Shape": "robot.png", "Layer": 0} # Si el agente es el fantasma
+    elif type(agent) == Incinerador and agent.condition == Incinerador.OFF:
+        return {"Shape": "circle", "Filled": "true", "Color": "Green", "r": 0.75, "Layer": 1}
+    elif type(agent) == Incinerador and agent.condition == Incinerador.ON:
+        return {"Shape": "circle", "Filled": "true", "Color": "Red", "r": 0.75, "Layer": 1}
+    elif type(agent) == Basura and agent.condition == Basura.UNCOLLECT:
+        return {"Shape": "circle", "Filled": "true", "Color": "Gray", "r": 0.75, "Layer": 0}
+    else:
+        return None  # Retorna None para agentes que no tienen representación visual
+
+
+grid = CanvasGrid(agent_portrayal, 51, 51, 700, 700)
+
+chart = ChartModule([{"Label": "Percent burned", "Color": "Black"}], data_collector_name='datacollector')
+
+server = ModularServer(Sala, [grid, chart], "Robots Limpiadores", {
+    "density": Slider("Trash density", 0.2, 0.01, 1.0, 0.01),
+    "max_steps": Slider("Max Step", 100000, 1, 1000, 1
+                        ),
+    "grid_size": Checkbox("Grid size (Off=21 On=51)", False),
+})
+server.port = 8522
+server.launch()
