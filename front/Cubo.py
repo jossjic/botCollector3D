@@ -8,6 +8,9 @@ from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
+from objloader import *
+import random
+import math
 
 class Cubo:
     
@@ -27,6 +30,10 @@ class Cubo:
 
         self.Position = [x, 5.0, z]
         
+    def cargar(self):
+        global obj
+        obj = OBJ("Car.obj", swapyz=True)
+        obj.generate()
 
     def update(self, new_x, new_z):
         self.Position[0] = new_x
@@ -43,4 +50,13 @@ class Cubo:
         glDrawElements(GL_QUADS, 24, GL_UNSIGNED_INT, self.elementArray)
         glDisableClientState(GL_VERTEX_ARRAY)
         glDisableClientState(GL_COLOR_ARRAY)
+        glPopMatrix()
+        
+    def draw2(self):
+        global obj
+        glPushMatrix()
+        glTranslatef(self.Position[0], self.Position[1], self.Position[2])
+        glScaled(5, 5, 5)
+        glRotatef(90, -1, 0, 0)
+        obj.render()
         glPopMatrix()
